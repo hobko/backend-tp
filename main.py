@@ -26,16 +26,17 @@ app.add_middleware(
 async def get_gpx(filename: str):
     try:
         # Replace this with the path to your GPX files directory
-        gpx_file_path = cur / "storage/geojson-cleaned" / filename
+        gpx_file_path = cur / "storage/gpx" / filename
 
         # Send the GPX file as a response
+        print("Ahoj hobo")
         return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail='File not found')
 
 @app.get("/api/getfiles")
 async def get_files():
-    folder_path = cur / "storage/geojson"  # Replace with the actual path to your GPX folder
+    folder_path = cur / "storage/gpx"  # Replace with the actual path to your GPX folder
 
     try:
         # List all files in the folder
