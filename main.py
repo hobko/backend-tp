@@ -5,11 +5,15 @@ from pathlib import Path
 from scripts.csvTogeojsonTogpxA import csv_to_gpx
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
-
+from config_loggers.logConfig import setup_logger
+from scripts.sendToMapMatching import send_post_request
 from starlette.middleware.cors import CORSMiddleware
+from services.exceptionMiddleware import ExceptionMiddleware
+
 from starlette.responses import JSONResponse
 
 app = FastAPI()
+logger = setup_logger()
 
 origins = ["http://localhost:4200"]
 cur: Path = Path(__file__).parent
@@ -20,29 +24,29 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(ExceptionMiddleware)  # Add the custom exception middleware
 
 
 @app.get('/api/getgpx/{filename}')
 async def get_gpx(filename: str):
     try:
-        # Replace this with the path to your GPX files directory
-        gpx_file_path = cur / "storage/gpx" / filename
-
-        # Send the GPX file as a response
-        print("Ahoj hobo")
+        gpx_file_path = cur / "storsage/gpx" / filename
+        logger.info(f'File was find and returned: {filename}', extra={'filename': filename})
         return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
     except FileNotFoundError:
+        logger.error(f'File not found: {filename}', extra={'filename': filename})
         raise HTTPException(status_code=404, detail='File not found')
 
 @app.get("/api/getfiles")
 async def get_files():
     folder_path = cur / "storage/gpx"  # Replace with the actual path to your GPX folder
-
     try:
         # List all files in the folder
         files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        logger.info("Files where succesfully send to site")
         return {"files": files}
     except Exception as e:
+        logger.critical(f"Failed to retrieve files. Error: {str(e)}")
         return {"error": f"Failed to retrieve files. Error: {str(e)}"}
 
 
@@ -53,6 +57,7 @@ async def upload_file(file: UploadFile = File(...)):
     with open(uploaded_file_path, 'wb') as uploaded_file:
         uploaded_file.write(file.file.read())
     csv_to_gpx(file.filename)
+    logger.info((f'File uploaded succesfully: {file.filename}'))
     return {"message": "File uploaded and processed successfully"}
 
 

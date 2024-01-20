@@ -9,6 +9,10 @@ import gpxpy
 import gpxpy.gpx
 import json
 
+from config_loggers.logConfig import setup_logger
+
+logger = setup_logger()
+
 
 def make_geojson_from_data(input_file_path, output_file_path):
     features = []
@@ -100,20 +104,28 @@ def csv_to_gpx(input_file_name):
     cur: Path = Path(__file__).parent.parent
     input_file_name_wo_extension = remove_file_extension(input_file_name)
     intermediate_file_name = input_file_name_wo_extension + ".geojson"
-    # Step 1: Generate GeoJSON from CSV
     input_csv_file = cur / "storage/uploads" / input_file_name
     intermediate_geojson_file = cur / "storage/geojson" / intermediate_file_name
-    make_geojson_from_data(input_csv_file, intermediate_geojson_file)
-    print(f'CSV file "{input_csv_file}" has been converted to GeoJSON and saved as "{intermediate_file_name}".')
-
-    # Step 2: Validate and clean the GeoJSON
-    input_geojson_file = intermediate_geojson_file
     output_cleaned_geojson_file = cur / "storage/geojson-cleaned" / intermediate_file_name
-    validate_and_clean_geojson(input_geojson_file, output_cleaned_geojson_file)
-    print(
-        f'GeoJSON file "{input_geojson_file}" has been validated and cleaned, saved as "{output_cleaned_geojson_file}".')
-
-    # Step 3: Transform Geojson to GPX
     output_gpx_file = input_file_name_wo_extension + ".gpx"
     output_gpx = cur / "storage/gpx" / output_gpx_file
-    geojson_to_gpx(output_cleaned_geojson_file, output_gpx)
+
+    try:
+        # Step 1: Generate GeoJSON from CSV
+        make_geojson_from_data(input_csv_file, intermediate_geojson_file)
+        logger.info(f'CSV file "{input_csv_file}" has been converted to GeoJSON and saved as "{intermediate_file_name}".')
+
+        # Step 2: Validate and clean the GeoJSON
+        validate_and_clean_geojson(intermediate_geojson_file, output_cleaned_geojson_file)
+        logger.info(f'GeoJSON file "{intermediate_geojson_file}" has been validated and cleaned, saved as "{output_cleaned_geojson_file}".')
+
+        # Step 3: Transform Geojson to GPX
+        geojson_to_gpx(output_cleaned_geojson_file, output_gpx)
+        logger.info(f'GeoJSON file "{output_cleaned_geojson_file}" has been successfully transformed to GPX and saved as "{output_gpx_file}".')
+
+    except Exception as e:
+        # Log an error if any exception occurs during the process
+        logger.error(f'Failed to convert CSV to GPX. Error: {str(e)}')
+        # Optionally, raise the exception again to propagate it
+        raise e
+
