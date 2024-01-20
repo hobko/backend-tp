@@ -9,6 +9,7 @@ import gpxpy
 import gpxpy.gpx
 import json
 
+from scripts.sendToMapMatching import send_post_request
 from config_loggers.logConfig import setup_logger
 
 logger = setup_logger()
@@ -122,6 +123,12 @@ def csv_to_gpx(input_file_name):
         # Step 3: Transform Geojson to GPX
         geojson_to_gpx(output_cleaned_geojson_file, output_gpx)
         logger.info(f'GeoJSON file "{output_cleaned_geojson_file}" has been successfully transformed to GPX and saved as "{output_gpx_file}".')
+
+        # Step 4: Get from graphhopper Matched gpx
+        response_data = send_post_request()
+        tmp1_file = cur / "storage/tmp" / "tmp1.gpx"
+        with open(tmp1_file, 'w') as tmp1_gpx_file:
+            tmp1_gpx_file.write(json.dumps(response_data, indent=2))
 
     except Exception as e:
         # Log an error if any exception occurs during the process

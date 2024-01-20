@@ -30,12 +30,13 @@ app.add_middleware(ExceptionMiddleware)  # Add the custom exception middleware
 @app.get('/api/getgpx/{filename}')
 async def get_gpx(filename: str):
     try:
-        gpx_file_path = cur / "storsage/gpx" / filename
-        logger.info(f'File was find and returned: {filename}', extra={'filename': filename})
+        gpx_file_path = cur / "storage/gpx" / filename
+        logger.info(f'File was find and returned: {filename}', extra={'file_identifier': filename})
         return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
     except FileNotFoundError:
-        logger.error(f'File not found: {filename}', extra={'filename': filename})
+        logger.error(f'File not found: {filename}',extra={'file_identifier': filename})
         raise HTTPException(status_code=404, detail='File not found')
+
 
 @app.get("/api/getfiles")
 async def get_files():
@@ -57,7 +58,7 @@ async def upload_file(file: UploadFile = File(...)):
     with open(uploaded_file_path, 'wb') as uploaded_file:
         uploaded_file.write(file.file.read())
     csv_to_gpx(file.filename)
-    logger.info((f'File uploaded succesfully: {file.filename}'))
+    logger.info(f'File uploaded succesfully: {file.filename}')
     return {"message": "File uploaded and processed successfully"}
 
 

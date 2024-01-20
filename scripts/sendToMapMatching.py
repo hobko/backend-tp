@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import requests
+
 
 def send_post_request():
     cur: Path = Path(__file__).parent.parent
@@ -27,6 +29,3 @@ def send_post_request():
         # Print an error message if the request was not successful
         print(f"Error: {response.status_code}")
         return None
-
-# Example usage
-response_data = send_post_request()
