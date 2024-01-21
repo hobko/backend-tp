@@ -75,7 +75,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.get("/api/hello")
 def hello_world():
-    return {"message": "1"}
+    return {"message": "System is up"}
 
 
 @app.get("/")

@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" version="1.1" creator="gpx.py -- https://github.com/tkrajina/gpxpy">
+  <trk>
+    <trkseg>
+      <trkpt lat="48.372140" lon="18.005720"></trkpt>
+      <trkpt lat="48.372140" lon="18.005720"></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -29,7 +29,6 @@ def send_post_request(filename):
         with open(matched_gpx_filename, 'w') as matched_gpx_file:
             matched_gpx_file.write(gpx_xml)
 
-        print(json_content)
         return json_content
     else:
         print(f"Error: {response.status_code}")

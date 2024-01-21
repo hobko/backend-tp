@@ -1,0 +1,1 @@
+{"features": [{"geometry": {"coordinates": [18.005913, 48.372211], "type": "Point"}, "properties": {"date": "231219", "speed": "0.6", "time": "195932"}, "type": "Feature"}, {"geometry": {"coordinates": [18.005907, 48.372215], "type": "Point"}, "properties": {"date": "231219", "speed": "1.6", "time": "195937"}, "type": "Feature"}], "type": "FeatureCollection"}
