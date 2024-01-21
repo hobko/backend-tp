@@ -34,7 +34,18 @@ async def get_gpx(filename: str):
         logger.info(f'File was find and returned: {filename}', extra={'file_identifier': filename})
         return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
     except FileNotFoundError:
-        logger.error(f'File not found: {filename}',extra={'file_identifier': filename})
+        logger.error(f'File not found: {filename}', extra={'file_identifier': filename})
+        raise HTTPException(status_code=404, detail='File not found')
+
+
+@app.get('/api/getgpx/matched/{filename}')
+async def get_gpx(filename: str):
+    try:
+        gpx_file_path = cur / "storage/gpx-matched" / filename
+        logger.info(f'File was find and returned: {filename}', extra={'file_identifier': filename})
+        return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
+    except FileNotFoundError:
+        logger.error(f'File not found: {filename}', extra={'file_identifier': filename})
         raise HTTPException(status_code=404, detail='File not found')
 
 
@@ -64,7 +75,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.get("/api/hello")
 def hello_world():
-    return {"message": "Hello, Worssssld!"}
+    return {"message": "1"}
 
 
 @app.get("/")

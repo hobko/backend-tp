@@ -125,10 +125,9 @@ def csv_to_gpx(input_file_name):
         logger.info(f'GeoJSON file "{output_cleaned_geojson_file}" has been successfully transformed to GPX and saved as "{output_gpx_file}".')
 
         # Step 4: Get from graphhopper Matched gpx
-        response_data = send_post_request()
-        tmp1_file = cur / "storage/tmp" / "tmp1.gpx"
-        with open(tmp1_file, 'w') as tmp1_gpx_file:
-            tmp1_gpx_file.write(json.dumps(response_data, indent=2))
+        response_data = send_post_request(input_file_name_wo_extension)
+        logger.info(f'Matched GPX file has been stored as json succesfully')
+
 
     except Exception as e:
         # Log an error if any exception occurs during the process

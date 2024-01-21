@@ -1,31 +1,80 @@
+import json
+from xml.dom.minidom import Document
 from pathlib import Path
-
+from polyline import polyline
 import requests
 
 
-def send_post_request():
+def send_post_request(filename):
     cur: Path = Path(__file__).parent.parent
     url = "http://localhost:8989/match?profile=car&gps_accuracy=20&type=json"
-    # Replace 'hesoyam.gpx' with the actual path to your GPX file
-    gpx_file_path = cur / 'storage/gpx/hesoyam.gpx'
+    gpx_file_path = cur / 'storage/gpx' / f'{filename}.gpx'
 
     with open(gpx_file_path, 'r') as gpx_file:
-        # Read the GPX file content as a string
         gpx_str = gpx_file.read()
 
-    headers = {'Content-Type': 'application/xml'}  # Adjust the content type if needed
-    params = {}  # Add any additional parameters if needed
+    headers = {'Content-Type': 'application/xml'}
+    params = {}
 
     response = requests.post(url, headers=headers, data=gpx_str, params=params)
 
-    # Check if the request was successful (status code 200)
     if response.status_code == 200:
-        # Parse the JSON content
         json_content = response.json()
-        # You can now work with the JSON content as needed
+
+        # Call convert_json_to_gpx function with the obtained JSON content
+        gpx_xml = convert_json_to_gpx(json_content)
+
+        # Save the matched GPX data to a file in the "storage/jsons" directory
+        matched_gpx_filename = cur / 'storage/gpx-matched' / f'{filename}_matched.gpx'
+        with open(matched_gpx_filename, 'w') as matched_gpx_file:
+            matched_gpx_file.write(gpx_xml)
+
         print(json_content)
         return json_content
     else:
-        # Print an error message if the request was not successful
         print(f"Error: {response.status_code}")
         return None
+
+
+def convert_json_to_gpx(json_content):
+    doc = Document()
+    # Vytvorenie koreňového elementu <gpx>
+    gpx = doc.createElement('gpx')
+    gpx.setAttribute('xmlns', 'http://www.topografix.com/GPX/1/1')
+    gpx.setAttribute('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+    gpx.setAttribute('xsi:schemaLocation',
+                     'http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd')
+    gpx.setAttribute('version', '1.1')
+    gpx.setAttribute('creator', 'gpx.py -- https://github.com/tkrajina/gpxpy')
+    # Vytvorenie elementu <trk>
+    trk = doc.createElement('trk')
+    # Vytvorenie elementu <trkseg>
+    trkseg = doc.createElement('trkseg')
+    points = json_content['paths'][0]['points']
+    decoded_points = polyline.decode(points)
+
+    for lat, lon in decoded_points:
+        # Vytvorenie elementu <trkpt>
+        trkpt = doc.createElement('trkpt')
+        trkpt.setAttribute('lat', '{:.6f}'.format(lat))
+        trkpt.setAttribute('lon', '{:.6f}'.format(lon))
+
+        # Pridanie prázdneho textového uzlu do <trkpt>
+        trkpt.appendChild(doc.createTextNode(''))
+
+        # Pridanie <trkpt> do <trkseg>
+        trkseg.appendChild(trkpt)
+
+    # Pridanie <trkseg> do <trk>
+    trk.appendChild(trkseg)
+
+    # Pridanie <trk> do <gpx>
+    gpx.appendChild(trk)
+
+    # Pridanie <gpx> do dokumentu
+    doc.appendChild(gpx)
+
+    return doc.toprettyxml(indent='  ')
+
+
+
