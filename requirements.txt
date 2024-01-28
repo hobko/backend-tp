@@ -7,3 +7,4 @@ geopandas~=0.14.1
 gpxpy~=1.6.2
 python-multipart~=0.0.6
 geojson~=3.1.0
+python-dotenv~=1.0.0

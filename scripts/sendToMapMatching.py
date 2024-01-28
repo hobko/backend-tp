@@ -3,11 +3,15 @@ from xml.dom.minidom import Document
 from pathlib import Path
 from polyline import polyline
 import requests
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
+GRAPHHOPPER_URL = os.environ.get('GRAPHHOPPER_URL')
 
 def send_post_request(filename):
     cur: Path = Path(__file__).parent.parent
-    url = "http://graphhopper:8989/match?profile=car&gps_accuracy=20&type=json"
+    url = f"{GRAPHHOPPER_URL}/match?profile=car&gps_accuracy=20&type=json"
     gpx_file_path = cur / 'storage/gpx' / f'{filename}.gpx'
 
     with open(gpx_file_path, 'r') as gpx_file:
@@ -74,6 +78,3 @@ def convert_json_to_gpx(json_content):
     doc.appendChild(gpx)
 
     return doc.toprettyxml(indent='  ')
-
-
-
