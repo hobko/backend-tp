@@ -15,7 +15,9 @@ from starlette.responses import JSONResponse
 app = FastAPI()
 logger = setup_logger()
 
-origins = ["http://localhost:4200"]
+origins = ["http://localhost:4200",
+           "http://localhost:8080",
+           "http://localhost"]
 cur: Path = Path(__file__).parent
 app.add_middleware(
     CORSMiddleware,

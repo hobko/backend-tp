@@ -1,8 +1,0 @@
-{
-"type": "FeatureCollection",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "date": "231219", "speed": "0.6", "time": "195932" }, "geometry": { "type": "Point", "coordinates": [ 18.005913, 48.372211 ] } },
-{ "type": "Feature", "properties": { "date": "231219", "speed": "1.6", "time": "195937" }, "geometry": { "type": "Point", "coordinates": [ 18.005907, 48.372215 ] } }
-]
-}

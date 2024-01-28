@@ -21,7 +21,7 @@
   - ```Invoke-WebRequest -Uri https://raw.githubusercontent.com/graphhopper/graphhopper/8.x/config-example.yml -OutFile config-example.yml```
   - ```Invoke-WebRequest -Uri http://download.geofabrik.de/europe/slovakia-latest.osm.pbf -OutFile slovakia-latest.osm.pbf```
   - **Po dokonceni tychto krokov pre spustenie napisat**
-  - ```java -D"dw.graphhopper.datareader.file=berlin-latest.osm.pbf" -jar graphhopper-web-8.0.jar server config-example.yml```
+  - ```java -D"dw.graphhopper.datareader.file=slovakia-latest.osm.pbf" -jar graphhopper-web-8.0.jar server config-example.yml```
 
 # Github aplikácie
 ### **Momentalne pouzivame len 3 a to map-matching, backend, frontend**
