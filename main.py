@@ -17,7 +17,7 @@ logger = setup_logger()
 
 origins = ["http://localhost:4200",
            "http://localhost:8080",
-           "http://localhost"]
+           "http://localhost:8989"]
 cur: Path = Path(__file__).parent
 app.add_middleware(
     CORSMiddleware,
@@ -33,6 +33,7 @@ app.add_middleware(ExceptionMiddleware)  # Add the custom exception middleware
 async def get_gpx(filename: str):
     try:
         gpx_file_path = cur / "storage/gpx" / filename
+        print(gpx_file_path)
         logger.info(f'File was find and returned: {filename}', extra={'file_identifier': filename})
         return FileResponse(gpx_file_path, media_type='application/gpx+xml', filename=filename)
     except FileNotFoundError:

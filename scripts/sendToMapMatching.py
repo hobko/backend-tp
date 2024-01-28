@@ -7,7 +7,7 @@ import requests
 
 def send_post_request(filename):
     cur: Path = Path(__file__).parent.parent
-    url = "http://localhost:8989/match?profile=car&gps_accuracy=20&type=json"
+    url = "http://graphhopper:8989/match?profile=car&gps_accuracy=20&type=json"
     gpx_file_path = cur / 'storage/gpx' / f'{filename}.gpx'
 
     with open(gpx_file_path, 'r') as gpx_file:
