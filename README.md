@@ -1,4 +1,5 @@
 **V priecinku /storage/csv/ su vzorove CSV subory na ktorych je to mozne otestovat** 
+# SKONTROLOVAT .env a precitat si komentaru k tomu
 # Lokalne spustenie (nie DOCKER)
 ## Ako spustit Angular prvy krat 
 - **Navštívte oficiálnu stránku [Node.js](https://nodejs.org/) a stiahnite si node**
