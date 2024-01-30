@@ -3,8 +3,8 @@ version: '3'
 services:
   graphhopper:
     build:
-      context: ../graphhopper
-      dockerfile: ../graphhopper/Dockerfile
+      context: ../graphoppertp
+      dockerfile: ../graphoppertp/Dockerfile
     ports:
       - "8989:8989"
       - "8990:8990"
@@ -13,7 +13,7 @@ services:
 
   backendtp:
     build:
-      context: ../TP-backend
+      context: ../backend-tp
       dockerfile: Dockerfile
     ports:
       - "8000:8000"
