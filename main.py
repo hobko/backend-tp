@@ -75,7 +75,7 @@ async def upload_file(file: UploadFile = File(...)):
     logger.info(f'File uploaded succesfully: {file.filename}')
     return {"message": "File uploaded and processed successfully"}
 
-
+# TOTO JE NA TEST
 @app.get("/api/hello")
 def hello_world():
     return {"message": "System is up"}
