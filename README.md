@@ -30,8 +30,23 @@
   - **do cmd treba napísať nasledovný príkaz**
     - ```docker-compose up``` **One command to rule them all!**
   - **Mometalne by sa to malo rozbehnut FE a BE naskocia skoro hned no s graphopperom treba pockat treba si kontrolovat konzolu alebo kde to spustate kym neuvidite ```INFO  org.eclipse.jetty.server.Server - Started```**
-
-
+  
+# PORTY na ktorých aplikácie bežia
+- **Backend - teda (fast api) bezi aj v dockeri aj pri lokalnom spusteni na adrese ```http://127.0.0.1:8000```**
+- **Map-matching - teda (Graphhopper) bezi na dvoch portoch. Port 8989 je usera posielame nan reqeusty. Port 8990 je na admin správu, momentálne ho nevyužívame ale od budúcna ho máme ready**
+  - **Docker**
+    - ```http://graphhopper:8989```
+      - **sem príma requesty od fast-api**
+    - ```http://graphhopper:8990``` 
+      - **admin rozhranie**
+  - **Local run**
+    - ```http://localhost:8989```
+    - ```http://localhost:8990```
+- **Frontend - teda (Angular)**
+  - **Docker**
+    - ```http://localhost:8080```
+  - **Local run**
+    - ```http://localhost:4200```
 # Github aplikácie
 ### **Momentalne pouzivame len 3 a to map-matching, backend, frontend**
 - [graphhopper](https://github.com/hobko/graphoppertp)
