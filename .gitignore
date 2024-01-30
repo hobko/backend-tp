@@ -1,4 +1,4 @@
-./storage/*
+/storage/*
 *__pycache__*
 ./logs/*
 ./venv/*
