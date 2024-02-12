@@ -2,6 +2,9 @@ import os
 import subprocess
 from pathlib import Path
 
+import requests
+from dotenv import load_dotenv
+
 from scripts.csvTogeojsonTogpxA import csv_to_gpx
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse
@@ -30,6 +33,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(ExceptionMiddleware)  # Add the custom exception middleware
+
+load_dotenv()
+GRAPHHOPPER_URL = os.environ.get('GRAPHHOPPER_URL')
 
 
 @app.get("/api/download/{filename}")
@@ -112,6 +118,19 @@ async def upload_file(file: UploadFile = File(...)):
 @app.get("/api/hello")
 def hello_world():
     return {"message": "System is up"}
+
+
+@app.get("/api/graphhopper/status")
+def graphhopper_check():
+    try:
+        url = f"{GRAPHHOPPER_URL}/health"
+        response = requests.get(url)
+        if response.status_code == 200:
+            return {"message": "OK"}
+        else:
+            return {"message": "Error"}
+    except requests.RequestException as e:
+        return {"message": f"Error: {e}"}
 
 
 @app.get("/")
