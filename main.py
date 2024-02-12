@@ -9,8 +9,14 @@ from config_loggers.logConfig import setup_logger
 from scripts.sendToMapMatching import send_post_request
 from starlette.middleware.cors import CORSMiddleware
 from services.exceptionMiddleware import ExceptionMiddleware
-
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from zipfile import ZipFile
+from pathlib import Path
+import os
+from zipfile import ZipFile
 from starlette.responses import JSONResponse
+import tempfile
 
 app = FastAPI()
 logger = setup_logger()
@@ -24,6 +30,36 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(ExceptionMiddleware)  # Add the custom exception middleware
+
+
+@app.get("/api/download/{filename}")
+async def download_gpx_as_zip(filename: str):
+    gpx_file_path = cur / "storage/gpx" / filename
+    filename_without_extension = os.path.splitext(filename)[0]
+    gpx_matched = filename_without_extension + "_matched.gpx"
+    gpx_matched_file_path = cur / "storage/gpx-matched" / gpx_matched
+
+    # Check if files exist
+    if not gpx_file_path.exists() or not gpx_matched_file_path.exists():
+        raise HTTPException(status_code=404, detail="One or more files not found")
+
+    logger.info(f"Adding {gpx_file_path} to ZIP")
+    logger.info(f"Adding {gpx_matched_file_path} to ZIP")
+    try:
+        # Create a temporary zip file
+        with tempfile.NamedTemporaryFile(delete=False) as temp_zip_file:
+            temp_zip_path = Path(temp_zip_file.name)
+            with ZipFile(temp_zip_path, "w") as zipf:
+                # Add the first file with the specified filename
+                zipf.write(gpx_file_path, os.path.basename(gpx_file_path))
+
+                # Add the second file with a unique name
+                zipf.write(gpx_matched_file_path, f"{filename_without_extension}_matched.gpx")
+
+        # Send the zip file as the response
+        return FileResponse(temp_zip_path, media_type="application/zip")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get('/api/getgpx/{filename}')
