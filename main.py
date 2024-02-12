@@ -133,6 +133,41 @@ def graphhopper_check():
         return {"message": f"Error: {e}"}
 
 
+@app.delete("/api/delete/storage/{file_name}")
+def delete_files_from_storage(file_name: str):
+    storage_path = cur / "storage"
+    allowed_extensions = {
+        "gpx": {
+            "gpx": storage_path / "gpx",
+            "gpx-matched": storage_path / "gpx-matched"
+        },
+        "geojson": {
+            "geojson": storage_path / "geojson",
+            "geojson-cleaned": storage_path / "geojson-cleaned"
+        },
+        "CSV": {
+            "uploads": storage_path / "uploads"
+        }
+    }
+    deleted_files = []
+    base_file_name = os.path.splitext(file_name)[0]
+    for extension, folders in allowed_extensions.items():
+        for folder_name, folder_path in folders.items():
+            if folder_name == "gpx-matched":
+                file_path = folder_path / (base_file_name + "_matched." + extension)
+            else:
+                file_path = folder_path / (base_file_name + "." + extension)
+
+            if file_path.exists():
+                file_path.unlink()
+                deleted_files.append(base_file_name + "." + extension)
+
+    if not deleted_files:
+        raise HTTPException(status_code=404, detail=f"No files matching '{file_name}' found for deletion")
+    else:
+        return {"message": f"Files {', '.join(deleted_files)} deleted successfully"}
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
