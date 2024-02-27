@@ -38,6 +38,23 @@ load_dotenv()
 GRAPHHOPPER_URL = os.environ.get('GRAPHHOPPER_URL')
 
 
+@app.get('/api/autoconvert')
+async def covert_uploads():
+    upload_dir = cur / "storage/uploads"
+    gpx_dir = cur / "storage/gpx"
+
+    # Get a list of CSV files in the upload directory
+    csv_files = [file for file in upload_dir.glob("*.[cC][sS][vV]") if file.is_file()]
+    print(csv_files)
+    for csv_file in csv_files:
+        gpx_file = gpx_dir / (csv_file.stem + ".gpx")  # Corresponding GPX file
+        if not gpx_file.exists():
+            csv_to_gpx(csv_file.name)
+            logger.info(f'File converted successfully: {csv_file.name}')
+
+    return {"message": "CSV files auto-converted to GPX"}
+
+
 @app.get("/api/download/{filename}")
 async def download_gpx_as_zip(filename: str):
     gpx_file_path = cur / "storage/gpx" / filename
