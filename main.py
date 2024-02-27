@@ -96,7 +96,7 @@ async def get_files():
     folder_path = cur / "storage/gpx"  # Replace with the actual path to your GPX folder
     try:
         # List all files in the folder
-        files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+        files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f)) and f != "TEST"]
         logger.info("Files where succesfully send to site")
         return {"files": files}
     except Exception as e:
