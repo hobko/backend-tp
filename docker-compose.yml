@@ -19,6 +19,8 @@ services:
       - "8000:8000"
     networks:
       - tp-network
+    volumes:
+      - ../backend-tp:/app
 
   angular:
     build:
@@ -28,6 +30,9 @@ services:
       - "8080:80"
     networks:
       - tp-network
+    volumes:
+      - ../TP-1:/app
+
 
 networks:
   tp-network:
