@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from typing import List
 
 import requests
 from dotenv import load_dotenv
@@ -183,6 +184,59 @@ def delete_files_from_storage(file_name: str):
         raise HTTPException(status_code=404, detail=f"No files matching '{file_name}' found for deletion")
     else:
         return {"message": f"Files {', '.join(deleted_files)} deleted successfully"}
+
+
+@app.delete("/api/delete/uploads/storage/")
+def delete_files_from_storage(selected_files: List[str]):
+    storage_path = cur / "storage/uploads"
+    deleted_files = []
+    for file_name in selected_files:
+        file_path = storage_path / file_name
+        if file_path.exists():
+            file_path.unlink()
+            deleted_files.append(file_name)
+
+    if not deleted_files:
+        raise HTTPException(status_code=404, detail="Files not found")
+    else:
+        return {"message": f"Files {', '.join(deleted_files)} deleted successfully"}
+
+
+@app.post("/api/convert/uploads/storage/")
+def delete_files_from_storage(selected_files: List[str]):
+    storage_path = cur / "storage/uploads"
+    convert_uploads = []
+    for file_name in selected_files:
+        file_path = storage_path / file_name
+        if file_path.exists():
+            csv_to_gpx(file_name)
+            convert_uploads.append(file_name)
+
+    if not convert_uploads:
+        raise HTTPException(status_code=404, detail="Files not found")
+    else:
+        return {"message": f"Files {', '.join(convert_uploads)} converted successfully"}
+
+
+
+@app.get("/api/uploads/getfiles")
+async def get_uploads_for_table():
+    upload_dir = cur / "storage/uploads"
+    gpx_dir = cur / "storage/gpx"
+    missing_gpx_files = []
+
+    # Get a list of CSV files in the upload directory
+    csv_files = [file for file in upload_dir.glob("*.[cC][sS][vV]") if file.is_file()]
+
+    for csv_file in csv_files:
+        gpx_file = gpx_dir / (csv_file.stem + ".gpx")  # Corresponding GPX file
+        if not gpx_file.exists():
+            missing_gpx_files.append(csv_file.name)
+
+    if missing_gpx_files:
+        return {"message": "CSV files auto-converted to GPX", "files": missing_gpx_files}
+    else:
+        return {"files": missing_gpx_files}
 
 
 @app.get("/")
