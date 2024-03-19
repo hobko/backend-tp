@@ -7,7 +7,7 @@ import requests
 from dotenv import load_dotenv
 
 from scripts.csvTogeojsonTogpxA import csv_to_gpx
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.responses import FileResponse
 from config_loggers.logConfig import setup_logger
 from scripts.sendToMapMatching import send_post_request
@@ -123,14 +123,17 @@ async def get_files():
 
 
 @app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file_with_vehicle(file: UploadFile = File(...), vehicle_type: str = Form(...)):
     # Path to the uploaded file
     uploaded_file_path = cur / "storage/uploads" / file.filename
     with open(uploaded_file_path, 'wb') as uploaded_file:
         uploaded_file.write(file.file.read())
-    csv_to_gpx(file.filename)
-    logger.info(f'File uploaded succesfully: {file.filename}')
-    return {"message": "File uploaded and processed successfully"}
+
+    # Process the file and vehicle type as needed
+    csv_to_gpx(file.filename, vehicle_type)
+    logger.info(f'File uploaded successfully: {file.filename}, Vehicle Type: {vehicle_type}')
+
+    return {"message": "File uploaded and processed successfully", "vehicle_type": vehicle_type}
 
 
 @app.get("/api/hello")
