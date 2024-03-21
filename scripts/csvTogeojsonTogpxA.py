@@ -1,5 +1,7 @@
 import csv
 import os
+from datetime import datetime
+from typing import Optional
 
 from geojson import Feature, FeatureCollection, Point
 from pathlib import Path
@@ -9,8 +11,14 @@ import gpxpy
 import gpxpy.gpx
 import json
 
+from sqlalchemy.orm import Session
+
+from database.database_operations import create_item
+from database.database import ItemCreate
 from scripts.sendToMapMatching import send_post_request
 from config_loggers.logConfig import setup_logger
+
+
 
 logger = setup_logger()
 
@@ -101,7 +109,7 @@ def remove_file_extension(filename):
     return root
 
 
-def csv_to_gpx(input_file_name, vehicle_type):
+def csv_to_gpx(input_file_name, vehicle_type, db):
     cur: Path = Path(__file__).parent.parent
     input_file_name_wo_extension = remove_file_extension(input_file_name)
     intermediate_file_name = input_file_name_wo_extension + ".geojson"
@@ -110,6 +118,7 @@ def csv_to_gpx(input_file_name, vehicle_type):
     output_cleaned_geojson_file = cur / "storage/geojson-cleaned" / intermediate_file_name
     output_gpx_file = input_file_name_wo_extension + ".gpx"
     output_gpx = cur / "storage/gpx" / output_gpx_file
+    matched_gpx_filename = cur / 'storage/gpx-matched' / f'{input_file_name_wo_extension}_matched.gpx'
 
     try:
         # Step 1: Generate GeoJSON from CSV
@@ -128,8 +137,20 @@ def csv_to_gpx(input_file_name, vehicle_type):
             f'GeoJSON file "{output_cleaned_geojson_file}" has been successfully transformed to GPX and saved as "{output_gpx_file}".')
 
         # Step 4: Get from graphhopper Matched gpx
-        response_data = send_post_request(input_file_name_wo_extension, vehicle_type)
+        send_post_request(input_file_name_wo_extension, vehicle_type)
         logger.info(f'Matched GPX file has been stored as json succesfully')
+
+        current_datetime = datetime.now()
+        new_item = ItemCreate(
+            name=input_file_name,
+            upload_path=str(input_csv_file),
+            gpx_path=str(output_gpx),
+            gpx_matched_path=str(matched_gpx_filename),  # You may adjust this accordingly
+            vehicle_type=str(vehicle_type),
+            inserted_date=str(current_datetime)  # You may adjust this accordingly
+        )
+        # Add the item to the database
+        create_item(new_item, db=db)  # Assuming you have a function to create items
 
 
     except Exception as e:

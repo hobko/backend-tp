@@ -17,7 +17,7 @@ class ExceptionMiddleware(BaseHTTPMiddleware):
                 status_code=exc.status_code,
             )
         except Exception as e:
-            logger.exception(f"Unexpected error: {str(e)}")
+            logger.exception(f"Unexpected error: 500")
             return JSONResponse(
                 content={"detail": "Internal Server Error"},
                 status_code=500,
