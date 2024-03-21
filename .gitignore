@@ -3,4 +3,4 @@
 ./logs/*
 ./venv/*
 .idea
-.env
+test.db
