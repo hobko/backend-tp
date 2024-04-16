@@ -1,51 +1,92 @@
 import csv
 import os
-from datetime import datetime
-from typing import Optional
-
-from geojson import Feature, FeatureCollection, Point
-from pathlib import Path
-import re
 import geopandas as gpd
 import gpxpy
 import gpxpy.gpx
 import json
-
-from sqlalchemy.orm import Session
-
+from datetime import datetime
+from geojson import Feature, FeatureCollection, Point
+from pathlib import Path
 from database.database_operations import create_item
 from database.database import ItemCreate
 from scripts.sendToMapMatching import send_post_request
 from config_loggers.logConfig import setup_logger
 
-
-
 logger = setup_logger()
 
+class CSVModel:
+    def __init__(self, header):
+        self.header = header
 
-def make_geojson_from_data(input_file_path, output_file_path):
-    features = []
+    def is_type_1(self):
+        required_columns = {'datetime', 'lat', 'lon', 'speed'}
+        return required_columns.issubset(self.header)
 
+    def is_type_2(self):
+        required_columns = {'DATE', 'TIME', 'LATITUDE N/S', 'LONGITUDE E/W', 'SPEED'}
+        return required_columns.issubset(self.header)
+
+def identify_csv_type(header):
+    model = CSVModel(header)
+    if model.is_type_1():
+        return 'type_1'
+    elif model.is_type_2():
+        return 'type_2'
+    else:
+        return 'unknown'
+
+def process_csv(input_file_path, output_file_path):
     with open(input_file_path, mode='r', newline='') as input_file:
         csv_reader = csv.reader(input_file)
         header = next(csv_reader)
 
-        lat_column_index = 4
-        lon_column_index = 5
+        csv_type = identify_csv_type(header)
+        if csv_type in {'type_1', 'type_2'}:
+            make_geojson_from_data(input_file_path, output_file_path, header, csv_type)
+        else:
+            # Handle unknown CSV type
+            print("Wrong CSV file format need header with <...>")
+            pass
+
+def make_geojson_from_data(input_file_path, output_file_path, header, file_type):
+    features = []
+
+    with open(input_file_path, mode='r', newline='') as input_file:
+        csv_reader = csv.reader(input_file)
+        next(csv_reader)
+
+        # Type indexes processing for both types
+        lat_column_index = header.index('lat') if 'lat' in header else header.index('LATITUDE N/S')
+        lon_column_index = header.index('lon') if 'lon' in header else header.index('LONGITUDE E/W')
+        speed_column_index = header.index('speed') if 'speed' in header else header.index('SPEED')
 
         for row in csv_reader:
-            lat_format = re.sub(r'.$', '', row[lat_column_index])
-            lon_format = re.sub(r'.$', '', row[lon_column_index])
-            lat = float(lat_format)
-            lon = float(lon_format)
+            lat_str = row[lat_column_index]
+            lon_str = row[lon_column_index]
+            speed = float(row[speed_column_index])
+
+            # Parse latitude and longitude from strings
+            lat_dir = lat_str[-1]
+            lon_dir = lon_str[-1]
+            lat = float(lat_str[:-1]) if lat_dir == 'N' else -float(lat_str[:-1])
+            lon = float(lon_str[:-1]) if lon_dir == 'E' else -float(lon_str[:-1])
 
             point = Point((lon, lat))
 
-            properties = {
-                'date': row[2],
-                'time': row[3],
-                'speed': row[7]
-            }
+            if file_type == 'type_1':
+                date_time = row[header.index('datetime')]
+                properties = {
+                    'date': date_time.split()[0],
+                    'time': date_time.split()[1],
+                    'speed': speed
+                }
+            elif file_type == 'type_2':
+                properties = {
+                    'date': row[header.index('DATE')],
+                    'time': row[header.index('TIME')],
+                    'speed': speed
+                }
+
             feature = Feature(geometry=point, properties=properties)
             features.append(feature)
 
@@ -54,6 +95,11 @@ def make_geojson_from_data(input_file_path, output_file_path):
     with open(output_file_path, 'w') as output_file:
         output_file.write(str(feature_collection))
 
+def get_header(csv_file):
+    with open(csv_file, "r") as file:
+        file = csv.reader(file, delimiter=',', quotechar='"')
+        header = next(file, None)
+        return header
 
 def validate_and_clean_geojson(input_file, output_file):
     gdf = gpd.read_file(input_file)
@@ -71,7 +117,10 @@ def validate_and_clean_geojson(input_file, output_file):
 
     return gdf
 
-
+'''
+Tu som upravoval funkciu, lebo to robilo zaporne hodnoty v gpx a preto to nechcelo convertovat na <nazov>_matched.gpx.
+Cize boli pridane iba ify na konverziu zapornych hodnot suradnic na kladne.
+'''
 def geojson_to_gpx(input_geojson, output_gpx):
     with open(input_geojson, 'r') as geojson_file:
         data = json.load(geojson_file)
@@ -86,15 +135,36 @@ def geojson_to_gpx(input_geojson, output_gpx):
 
         if geometry_type == 'Point':
             lat, lon = coordinates[1], coordinates[0]  # GeoJSON uses [lon, lat] order
+
+            # Ensure latitude and longitude are positive if they should be
+            if lat < 0:
+                lat = abs(lat)
+            if lon < 0:
+                lon = abs(lon)
+
             segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
         elif geometry_type == 'LineString':
             for point in coordinates:
                 lat, lon = point[1], point[0]  # GeoJSON uses [lon, lat] order
+
+                # Ensure latitude and longitude are positive if they should be
+                if lat < 0:
+                    lat = abs(lat)
+                if lon < 0:
+                    lon = abs(lon)
+
                 segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
         elif geometry_type == 'MultiLineString':
             for line_string in coordinates:
                 for point in line_string:
                     lat, lon = point[1], point[0]  # GeoJSON uses [lon, lat] order
+
+                    # Ensure latitude and longitude are positive if they should be
+                    if lat < 0:
+                        lat = abs(lat)
+                    if lon < 0:
+                        lon = abs(lon)
+
                     segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
 
     track.segments.append(segment)
@@ -120,12 +190,14 @@ def csv_to_gpx(input_file_name, vehicle_type, db):
     output_gpx = cur / "storage/gpx" / output_gpx_file
     matched_gpx_filename = cur / 'storage/gpx-matched' / f'{input_file_name_wo_extension}_matched.gpx'
 
-    try:
-        # Step 1: Generate GeoJSON from CSV
-        make_geojson_from_data(input_csv_file, intermediate_geojson_file)
-        logger.info(
-            f'CSV file "{input_csv_file}" has been converted to GeoJSON and saved as "{intermediate_file_name}".')
+    header = get_header(input_csv_file)
+    if header:
+        process_csv(input_csv_file, intermediate_geojson_file)
+    else:
+        print("No header found in the CSV file.")
+        return  # terminate function if header not found
 
+    try:
         # Step 2: Validate and clean the GeoJSON
         validate_and_clean_geojson(intermediate_geojson_file, output_cleaned_geojson_file)
         logger.info(
@@ -151,7 +223,6 @@ def csv_to_gpx(input_file_name, vehicle_type, db):
         )
         # Add the item to the database
         create_item(new_item, db=db)  # Assuming you have a function to create items
-
 
     except Exception as e:
         # Log an error if any exception occurs during the process
