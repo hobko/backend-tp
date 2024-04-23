@@ -1,7 +1,17 @@
+from datetime import datetime
 from typing import List
 
 from database.database import ItemCreate, Item
 from sqlalchemy.orm import Session
+
+from pydantic import BaseModel
+from typing import List
+
+
+class FileData(BaseModel):
+    filename: str
+    vehicle_type: str
+    inserted_date: datetime
 
 
 def create_item(item_data: ItemCreate, db: Session):
@@ -30,3 +40,16 @@ def delete_item_by_filename(db: Session, filename: str):
     except Exception as e:
         db.rollback()
         return False
+
+
+def get_all_file_data(db: Session) -> List[FileData]:
+    items = db.query(Item).all()
+    files_data = []
+    for item in items:
+        file_data = FileData(
+            filename=item.name,
+            vehicle_type=item.vehicle_type,
+            inserted_date=item.inserted_date
+        )
+        files_data.append(file_data)
+    return files_data

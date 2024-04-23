@@ -180,16 +180,15 @@ async def get_gpx(filename: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail='File not found')
 
 
-@app.get("/api/getfiles", tags=["API"])
+@app.get("/api/getfiles", tags=["API"], response_model=List[FileData])
 async def get_files(db: Session = Depends(get_db)):
     try:
-        filenames = get_all_filenames(db)
-        logger.info("Files were successfully retrieved from the database")
-        return {"files": filenames}
+        files_data = get_all_file_data(db)
+        logger.info("Files data were successfully retrieved from the database")
+        return files_data
     except Exception as e:
-        logger.critical(f"Failed to retrieve files from the database. Error: {str(e)}")
-        return {"error": f"Failed to retrieve files from the database. Error: {str(e)}"}
-
+        logger.critical(f"Failed to retrieve files data from the database. Error: {str(e)}")
+        return {"error": f"Failed to retrieve files data from the database. Error: {str(e)}"}
 
 @app.post("/api/upload", tags=["API"])
 async def upload_file_with_vehicle(file: UploadFile = File(...), vehicle_type: str = Form(...),
