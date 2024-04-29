@@ -68,16 +68,34 @@ def make_geojson_from_data(input_file_path, output_file_path, header, file_type)
             # Parse latitude and longitude from strings
             lat_dir = lat_str[-1]
             lon_dir = lon_str[-1]
-            lat = float(lat_str[:-1]) if lat_dir == 'N' else -float(lat_str[:-1])
-            lon = float(lon_str[:-1]) if lon_dir == 'E' else -float(lon_str[:-1])
+            lat_str = lat_str[:-1] if lat_dir in ['N', 'S'] else lat_str
+            lon_str = lon_str[:-1] if lon_dir in ['E', 'W'] else lon_str
+            lat = float(lat_str)
+            lon = float(lon_str)
+
+            # Ak je smer 'N' alebo 'E', nezmení sa znamienko
+            if lat_dir == 'S':
+                lat = -lat
+            if lon_dir == 'W':
+                lon = -lon
 
             point = Point((lon, lat))
 
             if file_type == 'type_1':
+                # Prevziať dátum a čas zo stĺpca 'datetime' a rozdeliť ich na dátum a čas
                 date_time = row[header.index('datetime')]
+                date_parts = date_time.split()[0].split('-')  # Rozdelenie dátumu na časti
+                time_parts = date_time.split()[1].split(':')  # Rozdelenie času na časti
+
+                # Vytvorenie reťazca pre dátum v požadovanom formáte "YYMMDD"
+                date = f"{date_parts[0][2:]}{date_parts[1]}{date_parts[2]}"
+
+                # Vytvorenie reťazca pre čas v požadovanom formáte "HHMMSS"
+                time = ''.join(time_parts)
+
                 properties = {
-                    'date': date_time.split()[0],
-                    'time': date_time.split()[1],
+                    'date': date,
+                    'time': time,
                     'speed': speed
                 }
             elif file_type == 'type_2':
@@ -134,36 +152,18 @@ def geojson_to_gpx(input_geojson, output_gpx):
         coordinates = feature['geometry']['coordinates']
 
         if geometry_type == 'Point':
-            lat, lon = coordinates[1], coordinates[0]  # GeoJSON uses [lon, lat] order
-
-            # Ensure latitude and longitude are positive if they should be
-            if lat < 0:
-                lat = abs(lat)
-            if lon < 0:
-                lon = abs(lon)
+            lon, lat = coordinates  # GeoJSON uses [lon, lat] order
 
             segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
         elif geometry_type == 'LineString':
             for point in coordinates:
-                lat, lon = point[1], point[0]  # GeoJSON uses [lon, lat] order
-
-                # Ensure latitude and longitude are positive if they should be
-                if lat < 0:
-                    lat = abs(lat)
-                if lon < 0:
-                    lon = abs(lon)
+                lon, lat = point  # GeoJSON uses [lon, lat] order
 
                 segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
         elif geometry_type == 'MultiLineString':
             for line_string in coordinates:
                 for point in line_string:
-                    lat, lon = point[1], point[0]  # GeoJSON uses [lon, lat] order
-
-                    # Ensure latitude and longitude are positive if they should be
-                    if lat < 0:
-                        lat = abs(lat)
-                    if lon < 0:
-                        lon = abs(lon)
+                    lon, lat = point  # GeoJSON uses [lon, lat] order
 
                     segment.points.append(gpxpy.gpx.GPXTrackPoint(lat, lon))
 
