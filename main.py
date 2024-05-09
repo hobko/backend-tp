@@ -115,7 +115,6 @@ async def covert_uploads(db: Session = Depends(get_db)):
 @app.get("/api/download/{filename}", tags=["API"])
 async def download_gpx_as_zip(filename: str, db: Session = Depends(get_db)):
     # Retrieve the item from the database based on the filename
-    filename = "chodza4.CSV"
     item = get_item_by_filename(db, filename)
     if not item:
         raise HTTPException(status_code=404, detail=f"No files matching '{filename}' found for download")
